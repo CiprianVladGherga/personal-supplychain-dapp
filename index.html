@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-xl font-semibold text-gray-900">Supply Chain Tracker</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="nav-home" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Home</button>
+                        <button id="nav-register" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Register Component</button>
+                        <div id="wallet-connector"></div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div id="page-content">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </main>
+
+        <!-- Transaction Notifier -->
+        <div id="transaction-notifier"></div>
+    </div>
+
+    <script type="module" src="src/contexts/web3Context.js"></script>
+    <script type="module" src="src/contexts/contractContext.js"></script>
+    <script type="module" src="src/services/contractService.js"></script>
+    <script type="module" src="src/components/walletConnector.js"></script>
+    <script type="module" src="src/components/componentForm.js"></script>
+    <script type="module" src="src/components/componentCard.js"></script>
+    <script type="module" src="src/components/transactionNotifier.js"></script>
+    <script type="module" src="src/pages/homePage.js"></script>
+    <script type="module" src="src/pages/registerPage.js"></script>
+    <script type="module" src="src/pages/componentDetailsPage.js"></script>
+    <script type="module" src="src/utils/formatters.js"></script>
+    
+    <script type="module">
+        import { Web3Context } from './src/contexts/web3Context.js';
+        import { ContractContext } from './src/contexts/contractContext.js';
+        import { WalletConnector } from './src/components/walletConnector.js';
+        import { TransactionNotifier } from './src/components/transactionNotifier.js';
+        import { HomePage } from './src/pages/homePage.js';
+        import { RegisterPage } from './src/pages/registerPage.js';
+        import { ComponentDetailsPage } from './src/pages/componentDetailsPage.js';
+
+        // Initialize contexts
+        const web3Context = new Web3Context();
+        const contractContext = new ContractContext(web3Context);
+        
+        // Initialize components
+        const walletConnector = new WalletConnector(web3Context);
+        const transactionNotifier = new TransactionNotifier();
+        const homePage = new HomePage(contractContext, transactionNotifier);
+        const registerPage = new RegisterPage(contractContext, transactionNotifier);
+        const componentDetailsPage = new ComponentDetailsPage(contractContext, transactionNotifier);
+
+        // Router
+        class Router {
+            constructor() {
+                this.currentPage = 'home';
+                this.init();
+            }
+
+            init() {
+                document.getElementById('nav-home').addEventListener('click', () => this.navigate('home'));
+                document.getElementById('nav-register').addEventListener('click', () => this.navigate('register'));
+                this.navigate('home');
+            }
+
+            navigate(page, params = {}) {
+                this.currentPage = page;
+                const content = document.getElementById('page-content');
+                
+                switch(page) {
+                    case 'home':
+                        content.innerHTML = homePage.render();
+                        homePage.init();
+                        break;
+                    case 'register':
+                        content.innerHTML = registerPage.render();
+                        registerPage.init();
+                        break;
+                    case 'component-details':
+                        content.innerHTML = componentDetailsPage.render(params.componentId);
+                        componentDetailsPage.init(params.componentId);
+                        break;
+                }
+            }
+        }
+
+        // Initialize app
+        window.router = new Router();
+        window.web3Context = web3Context;
+        window.contractContext = contractContext;
+    </script>
+</body>
+</html>
